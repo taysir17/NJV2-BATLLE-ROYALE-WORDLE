@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle Battle Royale</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+min-height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 20px;
+}
+
+.container {
+background: rgba(255, 255, 255, 0.95);
+border-radius: 20px;
+padding: 30px;
+max-width: 1200px;
+width: 100%;
+box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+text-align: center;
+color: #667eea;
+margin-bottom: 10px;
+font-size: 2.5em;
+}
+
+.subtitle {
+text-align: center;
+color: #666;
+margin-bottom: 30px;
+font-size: 1.1em;
+}
+.letter-box.active {
+border-color: #667eea;
+animation: pop 0.2s infinite alternate;
+}
+.letter-box.correct { background: #27ae60; color: white; border-color: #27ae60; }
+.letter-box.present { background: #f7b731; color: white; border-color: #f7b731; }
+.letter-box.absent { background: #eb2f06; color: white; border-color: #eb2f06; }
+
+.game-info {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 15px;
+margin-bottom: 30px;
+}
+
+.info-card {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color: white;
+padding: 20px;
+border-radius: 15px;
+text-align: center;
+box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.info-label {
+font-size: 0.9em;
+opacity: 0.9; 
+}
+
+.info-value {
+font-size: 2em;
+font-weight: bold;
+}
+
+.timer {
+background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+}
+
+.game-board {
+display: flex;
+flex-direction: column;
+align-items: center;
+margin-bottom: 30px;
+}
+
+.word-grid {
+display: grid;
+gap: 5px;
+margin-bottom: 20px;
+}
+
+.letter-box {
+width: 60px;
+height: 60px;
+border: 3px solid #d3d6da;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 2em;
+font-weight: bold;
+text-transform: uppercase;
+border-radius: 5px;
+transition: all 0.3s;
+}
+
+.letter-box.filled {
+border-color: #878a8c;
+animation: pop 0.1s;
+}
+
+.letter-box.correct {
+background: #27ae60;
+border-color: #27ae60;
+color: white;
+}
+
+.letter-box.present {
+background: #f7b731;
+border-color: #f7b731;
+color: white;
+}
+
+.letter-box.absent {
+background: #eb2f06;
+border-color: #eb2f06;
+color: white;
+}
+
+@keyframes pop {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.1); }
+}
+
+.keyboard {
+display: flex;
+flex-direction: column;
+gap: 8px;
+align-items: center;
+margin-bottom: 20px;
+}
+
+.keyboard-row {
+display: flex;
+gap: 6px;
+}
+
+.key {
+padding: 15px;
+min-width: 43px;
+background: #d3d6da;
+border: none;
+border-radius: 5px;
+font-size: 1em;
+font-weight: bold;
+cursor: pointer;
+transition: all 0.2s;
+}
+
+.key:hover {
+background: #bbbdbf;
+transform: scale(1.05);
+}
+
+.key.wide {
+min-width: 65px;
+font-size: 0.8em;
+}
+
+.key.correct {
+background: #27ae60;
+color: white;
+}
+
+.key.present {
+background: #f7b731;
+color: white;
+}
+
+.key.absent {
+background: #eb2f06;
+color: white;
+}
+
+.players-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+gap: 10px;
+max-height: 300px;
+overflow-y: auto;
+padding: 15px;
+background: #f8f9fa;
+border-radius: 10px;
+}
+
+.player-card {
+background: white;
+padding: 12px;
+border-radius: 8px;
+text-align: center;
+border: 2px solid #e0e0e0;
+transition: all 0.3s;
+}
+
+.player-card.active {
+border-color: #6aaa64;
+background: #f0f8f0;
+}
+
+.player-card.eliminated {
+opacity: 0.5;
+background: #ffe0e0;
+border-color: #ff6b6b;
+}
+
+.player-name {
+font-weight: bold;
+margin-bottom: 5px;
+color: #333;
+}
+
+.player-status {
+font-size: 0.85em;
+color: #666;
+}
+
+.btn {
+padding: 15px 40px;
+font-size: 1.2em;
+font-weight: bold;
+border: none;
+border-radius: 10px;
+cursor: pointer;
+transition: all 0.3s;
+color: white;
+margin: 10px;
+}
+
+.btn-start {
+background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn-start:hover {
+transform: translateY(-2px);
+box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.message {
+text-align: center;
+padding: 20px;
+border-radius: 10px;
+margin: 20px 0;
+font-size: 1.2em;
+font-weight: bold;
+}
+
+.message.success {
+background: #d4edda;
+color: #155724;
+}
+
+.message.error {
+background: #f8d7da;
+color: #721c24;
+}
+
+.message.info {
+background: #d1ecf1;
+color: #0c5460;
+}
+
+.controls {
+text-align: center;
+}
+
+.hidden {
+display: none;
+}
+
+.modal-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 280px;
+    max-width: 90vw;
+    background: #fffbe6;
+    color: #764ba2;
+    font-size: 1.35em;
+    font-weight: bold;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px #764ba244;
+    padding: 28px 32px;
+    z-index: 1000;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    animation: fadeBounce 3s forwards;
+}
+@keyframes fadeBounce {
+    0% { opacity: 0; transform: translate(-50%, -60%) scale(0.7);}
+    10% { opacity: 1; transform: translate(-50%, -50%) scale(1.08);}
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1);}
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -40%) scale(0.7);}
+}
+
+@media (max-width: 768px) {
+.letter-box {
+width: 50px;
+height: 50px;
+font-size: 1.5em;
+}
+.key {
+padding: 12px;
+min-width: 35px;
+}
+}
+@media (max-width: 768px) {
+.letter-box { width: 50px; height: 50px; font-size: 1.5em; }
+}
+
+/* --- FINAL SCOREBOARD CONTAINER --- */
+.score-table {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 40px 30px;
+    max-width: 1100px;
+    margin: 40px auto 0 auto;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.25);
+    animation: slideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(40px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.score-table h2 {
+    font-size: 2.8em;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 35px;
+    text-align: center;
+    text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    animation: titlePulse 2s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* --- PODIUM 3D EFFECT --- */
+.podium-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 30px;
+    margin: 40px 0 50px 0;
+    perspective: 1200px;
+}
+
+.podium-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 20px;
+    padding: 30px 25px 20px 25px;
+    min-width: 160px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.podium-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: rotate(45deg);
+    transition: all 0.5s;
+}
+
+.podium-card:hover::before {
+    left: 100%;
+}
+
+.podium-card:hover {
+    transform: translateY(-10px) scale(1.05);
+}
+
+/* GOLD - 1st Place */
+.podium-card.podium-1 {
+    background: linear-gradient(145deg, #FFD700, #FFA500, #FFD700);
+    box-shadow: 0 20px 60px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.3);
+    border: 4px solid #FFF8DC;
+    transform: scale(1.15) translateY(-15px);
+    z-index: 3;
+    animation: goldGlow 3s ease-in-out infinite;
+}
+
+@keyframes goldGlow {
+    0%, 100% { box-shadow: 0 20px 60px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 25px 80px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 215, 0, 0.5); }
+}
+
+/* SILVER - 2nd Place */
+.podium-card.podium-2 {
+    background: linear-gradient(145deg, #E8E8E8, #C0C0C0, #D3D3D3);
+    box-shadow: 0 15px 50px rgba(192, 192, 192, 0.4), 0 0 30px rgba(192, 192, 192, 0.2);
+    border: 4px solid #F5F5F5;
+    transform: scale(1.08) translateY(-8px);
+    z-index: 2;
+}
+
+/* BRONZE - 3rd Place */
+.podium-card.podium-3 {
+    background: linear-gradient(145deg, #CD7F32, #B87333, #D4A574);
+    box-shadow: 0 15px 50px rgba(205, 127, 50, 0.4), 0 0 30px rgba(205, 127, 50, 0.2);
+    border: 4px solid #F5DEB3;
+    transform: scale(1.05) translateY(-5px);
+    z-index: 2;
+}
+
+.podium-medal {
+    font-size: 4em;
+    margin-bottom: 15px;
+    animation: medalBounce 2s ease-in-out infinite;
+    filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3));
+}
+
+@keyframes medalBounce {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(-5deg); }
+    75% { transform: translateY(-8px) rotate(5deg); }
+}
+
+.podium-card.podium-1 .podium-medal {
+    animation: medalBounce 2s ease-in-out infinite, goldSpin 4s linear infinite;
+}
+
+@keyframes goldSpin {
+    0%, 100% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+}
+
+.podium-name {
+    font-size: 1.5em;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 8px;
+    text-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    letter-spacing: 1px;
+}
+
+.podium-score {
+    font-size: 1.3em;
+    color: #fff;
+    font-weight: bold;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.podium-rounds {
+    font-size: 1.1em;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* --- SCOREBOARD TABLE --- */
+.score-table h3 {
+    font-size: 1.8em;
+    color: #764ba2;
+    margin: 40px 0 20px 0;
+    font-weight: 700;
+    text-align: center;
+}
+
+.score-table table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 1.1em;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(118, 75, 162, 0.15);
+}
+
+.score-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+}
+
+.score-table thead::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f093fb, #f5576c, #f093fb);
+}
+
+.score-table th {
+    color: #fff;
+    font-weight: 700;
+    padding: 18px 15px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-size: 0.9em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.score-table tbody tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.score-table tbody tr::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(118, 75, 162, 0.1), transparent);
+}
+
+.score-table td {
+    padding: 16px 12px;
+    text-align: center;
+    font-weight: 500;
+    color: #333;
+}
+
+.score-table tbody tr:nth-child(even) {
+    background: linear-gradient(90deg, #fafafa 0%, #f5f5ff 50%, #fafafa 100%);
+}
+
+.score-table tbody tr:nth-child(odd) {
+    background: #fff;
+}
+
+/* Podium rows highlighting */
+.score-table tr.podium-1 {
+    background: linear-gradient(90deg, #fff8dc, #fffacd, #fff8dc) !important;
+    box-shadow: inset 0 0 0 2px #FFD700;
+}
+
+.score-table tr.podium-1 td {
+    color: #d4af37;
+    font-weight: 800;
+    font-size: 1.1em;
+}
+
+.score-table tr.podium-2 {
+    background: linear-gradient(90deg, #f5f5f5, #e8e8e8, #f5f5f5) !important;
+    box-shadow: inset 0 0 0 2px #C0C0C0;
+}
+
+.score-table tr.podium-2 td {
+    color: #888;
+    font-weight: 700;
+    font-size: 1.05em;
+}
+
+.score-table tr.podium-3 {
+    background: linear-gradient(90deg, #fff5e6, #ffe4cc, #fff5e6) !important;
+    box-shadow: inset 0 0 0 2px #CD7F32;
+}
+
+.score-table tr.podium-3 td {
+    color: #a65c28;
+    font-weight: 700;
+    font-size: 1.05em;
+}
+
+.score-table tbody tr:hover {
+    background: linear-gradient(90deg, #e3e3ff, #d5d5ff, #e3e3ff) !important;
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(118, 75, 162, 0.2);
+    z-index: 1;
+}
+
+.score-table td:first-child {
+    font-weight: 700;
+    font-size: 1.2em;
+    color: #764ba2;
+}
+
+.score-table td.status {
+    font-size: 1.5em;
+    font-weight: bold;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.score-table td.status[data-status="✅"] { 
+    color: #27ae60;
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+.score-table td.status[data-status="❌"] { 
+    color: #eb2f06;
+}
+
+.score-table td.status[data-status="⏳"] { 
+    color: #f7b731;
+    animation: statusSpin 3s linear infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes statusSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .podium-container { 
+        flex-direction: column; 
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .podium-card { 
+        min-width: 200px;
+        max-width: 85vw;
+    }
+    
+    .podium-card.podium-1,
+    .podium-card.podium-2,
+    .podium-card.podium-3 {
+        transform: scale(1) translateY(0) !important;
+    }
+    
+    .score-table {
+        padding: 25px 15px;
+    }
+    
+    .score-table table {
+        font-size: 0.9em;
+    }
+    
+    .score-table th,
+    .score-table td {
+        padding: 12px 8px;
+    }
+    
+    .score-table h2 {
+        font-size: 2em;
+    }
+}
+
+/* Animation styles for score table transition */
+.container.fade-out {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.98);
+    transition: opacity 0.8s, transform 0.8s;
+    pointer-events: none;
+}
+.score-table.fade-in {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+    animation: fadeInScoreTable 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes fadeInScoreTable {
+    0% { opacity: 0; transform: translateY(40px) scale(0.98);}
+    60% { opacity: 1; transform: translateY(-10px) scale(1.01);}
+    100% { opacity: 1; transform: translateY(0) scale(1);}
+}
+</style>
+<!-- Remplacez les imports Firebase par les versions UMD compatibles navigateur -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+</head>
+<body>
+<div class="container" id="mainContainer">
+<h1 id="mainTitle">🎮 WORDLE BATTLE ROYALE 🎮</h1>
+<!-- Explication des règles du jeu -->
+<div id="rulesBlock" style="margin: 0 auto 25px auto; max-width: 700px; background: #f7f7ff; border-radius: 14px; box-shadow: 0 2px 12px #667eea22; padding: 22px 28px; font-size: 1.13em; color: #444;">
+<h2 style="color:#764ba2; font-size:1.3em; margin-bottom:10px;">Bienvenue dans le Wordle Battle Royale !</h2>
+<ul style="margin-left: 18px; margin-bottom: 10px;">
+<li>👥 <b>Plusieurs joueurs</b> s'affrontent en même temps. C'est la bagarre des mots !</li>
+<li>
+⏳ <b>Durée des rounds selon la difficulté :</b>
+<ul style="margin-left:18px;">
+<li>🟢 <b>Easy (10 premiers rounds)</b> : 1 minute (60 secondes)</li>
+<li>🟡 <b>Medium (8 rounds suivants)</b> : 1 minute 30 (90 secondes)</li>
+<li>🔴 <b>Hard (10 derniers rounds)</b> : 2 minutes 15 (135 secondes)</li>
+</ul>
+<span style="color:#764ba2;font-size:0.98em;">La durée augmente avec la difficulté !</span>
+</li>
+<li>
+<b>Devine le mot</b> lettre par lettre :
+<br>
+<span style="display:block;margin-left:18px;">
+🟩 <b>Vert :</b> La lettre est bien placée, bravo champion !
+</span>
+<span style="display:block;margin-left:18px;">
+🟨 <b>Jaune :</b> La lettre est dans le mot, mais pas à la bonne place. Presque !
+</span>
+<span style="display:block;margin-left:18px;">
+🟥 <b>Rouge :</b> La lettre n'est pas dans le mot. Oups, essaie encore !
+</span>
+</li>
+<li>
+<b>Comment tu rates ?</b>
+<br>
+<span style="display:block;margin-left:18px;">
+❌ Si tu utilises trop d'essais ou si le chrono explose, c'est la sortie ! On te dit "Au revoir !" et tu rejoins le banc des éliminés. 
+<br>
+<i>Astuce : chaque mot a 6 essais, alors réfléchis... mais pas trop longtemps !</i>
+</span>
+</li>
+<li>🏆 <b>Dernier joueur debout</b> = grand gagnant, médaille, gloire et frites virtuelles !</li>
+<li>🔢 <b>Plus tu avances dans les rounds</b>, plus les mots sont longs et corsés. Courage !</li>
+<li>💡 <b>Astuce :</b> Même si tu ne connais pas le mot, tente ta chance, tout mot du bon nombre de lettres est accepté !</li>
+<li>🎉 <b>À la fin</b>, classement, scores, bonus de survie et détails pour frimer devant les copains.</li>
+</ul>
+<div style="color:#667eea; font-weight:bold; margin-top:8px;">
+Prêt à montrer que tu es le roi du vocabulaire ? Clique sur "Rejoindre la partie" et que le meilleur gagne !
+</div>
+</div>
+
+<!-- Formulaire d'inscription -->
+<!-- Ajoutez une explication au-dessus du champ code de partie -->
+<div id="gameCodeForm" class="controls">
+<p style="margin-bottom:8px;color:#555;">
+<strong>Code de la partie :</strong> 
+<br>
+<span style="color:#667eea">NJV2</span>
+Tous les joueurs doivent entrer ce même code pour rejoindre la même partie.
+</p>
+<input type="text" id="gameCodeInput" placeholder="Code de la partie..." style="padding:10px; font-size:1em; border-radius:5px; border:1px solid #ccc; margin-bottom:10px;">
+<button class="btn btn-start" id="gameCodeBtn">Rejoindre la partie</button>
+</div>
+<div id="signupForm" class="controls hidden">
+<input type="text" id="pseudoInput" placeholder="Entrez votre pseudo..." style="padding:10px; font-size:1em; border-radius:5px; border:1px solid #ccc; margin-bottom:10px;">
+<button class="btn btn-start" id="signupBtn">S'inscrire</button>
+</div>
+
+<div class="game-info hidden" id="gameInfo">
+<div class="info-card">
+<div class="info-label">Joueurs Restants</div>
+<div class="info-value" id="playersRemaining">50</div>
+</div>
+<div class="info-card timer">
+<div class="info-label">Temps Restant</div>
+<div class="info-value" id="timer">2:00</div>
+</div>
+<div class="info-card">
+<div class="info-label">Round Actuel</div>
+<div class="info-value" id="roundNumber">1</div>
+</div>
+<div class="info-card">
+<div class="info-label">Lettres du Mot</div>
+<div class="info-value" id="wordLength">5</div>
+</div>
+</div>
+
+<div id="messageBox" class="message hidden"></div>
+
+<div id="gameBoard" class="game-board hidden">
+    <div id="wordGrid" class="word-grid"></div>
+    <div class="keyboard">
+    <div class="keyboard-row">
+    <button class="key" data-key="A">A</button>
+    <button class="key" data-key="Z">Z</button>
+    <button class="key" data-key="E">E</button>
+    <button class="key" data-key="R">R</button>
+    <button class="key" data-key="T">T</button>
+    <button class="key" data-key="Y">Y</button>
+    <button class="key" data-key="U">U</button>
+    <button class="key" data-key="I">I</button>
+    <button class="key" data-key="O">O</button>
+    <button class="key" data-key="P">P</button>
+    </div>
+    <div class="keyboard-row">
+    <button class="key" data-key="Q">Q</button>
+    <button class="key" data-key="S">S</button>
+    <button class="key" data-key="D">D</button>
+    <button class="key" data-key="F">F</button>
+    <button class="key" data-key="G">G</button>
+    <button class="key" data-key="H">H</button>
+    <button class="key" data-key="J">J</button>
+    <button class="key" data-key="K">K</button>
+    <button class="key" data-key="L">L</button>
+    <button class="key" data-key="M">M</button>
+    </div>
+    <div class="keyboard-row">
+    <button class="key wide" data-key="Enter">ENTRER</button>
+    <button class="key" data-key="W">W</button>
+    <button class="key" data-key="X">X</button>
+    <button class="key" data-key="C">C</button>
+    <button class="key" data-key="V">V</button>
+    <button class="key" data-key="B">B</button>
+    <button class="key" data-key="N">N</button>
+    <button class="key wide" data-key="Backspace">EFFACER</button>
+    </div>
+    </div>
+</div>
+
+<!-- AJOUTER la liste des joueurs EN DEHORS de gameBoard, juste après -->
+<div id="livePlayersList" style="width:100%;margin-top:18px;display:none;">
+    <!-- Rempli dynamiquement par JS -->
+</div>
+
+<div class="players-grid" id="playersGrid"></div>
+
+<div class="controls hidden" id="controlsDiv">
+<button class="btn btn-start" id="startBtn">Démarrer la Partie</button>
+</div>
+</div>
+<!-- Ajoute la div modale pour les messages animés -->
+<div id="modalMessage" class="modal-message hidden"></div>
+<script>
+// 1. Initialisation Firebase
+const firebaseConfig = {
+apiKey: "AIzaSyAHy3KtPwqDd5Ig3-gWNHqTHFRcmkUwwCI",
+authDomain: "njv2-5508b.firebaseapp.com",
+databaseURL: "https://njv2-5508b-default-rtdb.europe-west1.firebasedatabase.app",
+projectId: "njv2-5508b",
+storageBucket: "njv2-5508b.firebasestorage.app",
+messagingSenderId: "763942757764",
+appId: "1:763942757764:web:f85951387eb618ca4a29d1",
+measurementId: "G-PZ254SW392"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// 2. Variables globales
+let gameCode = "";
+let pseudo = "";
+let isAdmin = false;
+let playerId = null;
+let currentRound = 1;
+let maxRounds = 28;
+let eliminated = false;
+let gameStarted = false;
+let timerInterval = null;
+let wordList = {
+easy: ["TABLE", "PLAGE", "ROUGE", "LIVRE", "PIANO", "ARBRE", "FLEUR", "CHEVAL", "POULE", "TIGRE"],
+medium: ["CAMION", "JARDIN", "ORDURE", "BOUTON", "CITRON", "SOURIS", "LAMPE", "COFFRE"],
+hard: ["ORDINATEUR", "CROCODILE", "PARAPLUIE", "ASTRONAUTE", "MICROPHONE", "BIBLIOTHEQUE", "TELEPHONE", "CALCULATRICE", "FRAMBOISE", "CHAMPIGNON"]
+};
+let roundConfig = [
+{difficulty: "easy", rounds: 10, time: 60},
+{difficulty: "medium", rounds: 8, time: 90},
+{difficulty: "hard", rounds: 10, time: 135}
+];
+let currentWord = "";
+let currentWordLength = 5;
+let maxAttempts = 6;
+let attempts = [];
+let activePlayers = [];
+let eliminatedPlayers = [];
+let roundStartTime = null; // <-- déjà défini, on l'utilise vraiment maintenant
+let totalTime = 0; // Ajout d'une variable locale pour suivre le temps total du joueur
+let timeLeft = 0;
+let currentInput = ""; // <-- DÉFINI ICI EN GLOBAL
+let gameEnded = false; // Drapeau local pour la fin de partie
+let playersListener = null; // Pour détacher le listener
+
+// --- SCORE UTILS ---
+// Nouveau calcul : score = (roundsCompleted × 1000) - totalTimeEnSecondes - (totalAttempts × 100)
+function computePlayerScore(p) {
+    const roundsCompleted = (p.roundsCompleted !== undefined) ? p.roundsCompleted : ((p.round || 1) - 1);
+    const totalTimeMs = p.totalTime || 0;
+    const totalTimeSec = Math.round(totalTimeMs / 1000);
+    // On récupère tous les essais (tableau d'essais par round)
+    let attemptsArr = p.attempts || [];
+    // Si c'est un tableau de tableaux, on somme leur longueur, sinon on prend la longueur directe
+    let totalAttempts = Array.isArray(attemptsArr)
+        ? attemptsArr.reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+        : 0;
+    // Si p.totalAttempts existe (sauvegardé), on l'utilise
+    if (typeof p.totalAttempts === "number") totalAttempts = p.totalAttempts;
+    return (roundsCompleted * 1000) - totalTimeSec - (totalAttempts * 100);
+}
+function formatTime(ms) {
+    if (!ms || ms <= 0) return "0s";
+    let s = Math.floor(ms / 1000);
+    let m = Math.floor(s / 60);
+    s = s % 60;
+    return (m > 0 ? `${m}m` : "") + `${s.toString().padStart(2, "0")}s`;
+}
+
+// --- FIN DE PARTIE ---
+function triggerGameEnd(playersObj) {
+    if (gameEnded) return;
+    gameEnded = true;
+    db.ref('games/' + gameCode + '/gameEnded').set(true);
+    // Marque la fin pour tous les joueurs
+    Object.entries(playersObj).forEach(([id, p]) => {
+        // Calcule roundsCompleted, totalTime, averageTimePerRound, finishTime, score
+        const roundsCompleted = (p.round || 1) - 1;
+        const totalTime = p.totalTime || 0;
+        const avgTime = roundsCompleted > 0 ? Math.round(totalTime / roundsCompleted) : 0;
+        const finishTime = p.finished ? (p.finishTime || Date.now()) : (p.eliminated ? (p.finishTime || Date.now()) : null);
+        const score = (roundsCompleted * 1000) - totalTime;
+        db.ref('games/' + gameCode + '/players/' + id).update({
+            roundsCompleted,
+            totalTime,
+            averageTimePerRound: avgTime,
+            finishTime: finishTime,
+            score
+        });
+    });
+    // Affiche le tableau de scores
+    showScoreTableWithPodium(playersObj);
+    // Détache le listener
+    if (playersListener) playersListener.off();
+}
+
+// --- SCOREBOARD FINAL ---
+// Remplace tout le contenu de .container par le tableau de scores avec animation
+function showScoreTableWithPodium(playersObj) {
+    // Supprime complètement le titre et le bloc de règles du DOM
+    const mainTitle = document.getElementById("mainTitle");
+    if (mainTitle) mainTitle.remove();
+    const rulesBlock = document.getElementById("rulesBlock");
+    if (rulesBlock) rulesBlock.remove();
+
+    // Récupère le container principal
+    const container = document.getElementById("mainContainer");
+    // Animation fade-out du container
+    container.classList.add("fade-out");
+
+    // Prépare le HTML du tableau (identique à avant)
+    let players = Object.entries(playersObj).map(([id, p]) => {
+        let roundsCompleted = p.roundsCompleted !== undefined ? p.roundsCompleted : ((p.round || 1) - 1);
+        let totalTimeMs = p.totalTime || 0;
+        let totalTimeSec = Math.round(totalTimeMs / 1000);
+        let avgTime = p.averageTimePerRound || (roundsCompleted > 0 ? Math.round(totalTimeMs / roundsCompleted) : 0);
+        let finishTime = p.finishTime || 0;
+        // Calcul du nombre total d'essais
+        let attemptsArr = p.attempts || [];
+        let totalAttempts = Array.isArray(attemptsArr)
+            ? attemptsArr.reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0)
+            : 0;
+        if (typeof p.totalAttempts === "number") totalAttempts = p.totalAttempts;
+        let score = p.score !== undefined ? p.score : (roundsCompleted * 1000) - totalTimeSec - (totalAttempts * 100);
+        let status = p.finished ? "✅" : (p.eliminated ? "❌" : "⏳");
+        return {
+            pseudo: p.pseudo,
+            roundsCompleted,
+            totalTime: totalTimeMs,
+            avgTime,
+            finishTime,
+            score,
+            totalAttempts,
+            status,
+            finished: !!p.finished,
+            eliminated: !!p.eliminated
+        };
+    });
+    players.sort((a, b) =>
+        b.roundsCompleted - a.roundsCompleted ||
+        b.score - a.score ||
+        a.totalTime - b.totalTime
+    );
+    players.forEach((p, i) => { p.rank = i + 1; });
+
+    let podium = players.slice(0, 3);
+
+    let podiumHtml = `<div class="podium-container">`;
+    const medals = ["🥇", "🥈", "🥉"];
+    podium.forEach((p, idx) => {
+        if (!p) return;
+        podiumHtml += `
+        <div class="podium-card podium-${idx+1}">
+            <div class="podium-medal">${medals[idx]}</div>
+            <div class="podium-name">${p.pseudo || ""}</div>
+            <div class="podium-score">Score: <b>${p.score || ""}</b></div>
+            <div class="podium-rounds">${p.roundsCompleted || ""} rounds</div>
+        </div>`;
+    });
+    podiumHtml += `</div>`;
+
+    let html = `<div class="score-table fade-in">
+        <h2>🏆 PARTIE TERMINÉE ! 🏆</h2>
+        ${podiumHtml}
+        <h3>Classement complet</h3>
+        <div style="overflow-x:auto;">
+        <table>
+            <thead>
+            <tr>
+                <th>Rang</th>
+                <th>Joueur</th>
+                <th>Rounds</th>
+                <th>Temps</th>
+                <th>Score</th>
+            </tr>
+            </thead>
+            <tbody>`;
+    players.forEach((p, idx) => {
+        let podiumClass = idx === 0 ? "podium-1" : idx === 1 ? "podium-2" : idx === 2 ? "podium-3" : "";
+        html += `<tr class="${podiumClass}">
+            <td>${p.rank}</td>
+            <td>${p.pseudo}</td>
+            <td>${p.roundsCompleted}</td>
+            <td>${formatTime(p.totalTime)}</td>
+            <td>${p.score}</td>
+        </tr>`;
+    });
+    html += `</tbody></table></div></div>`;
+
+    // Après l'animation fade-out, remplace le contenu et anime le fade-in
+    setTimeout(() => {
+        container.innerHTML = html;
+        container.classList.remove("fade-out");
+        // Le fade-in est géré par la classe fade-in sur .score-table
+    }, 800);
+
+    // Cache la grille et infos (sécurité)
+    if (gameBoard) gameBoard.classList.add("hidden");
+    if (gameInfo) gameInfo.classList.add("hidden");
+    if (document.getElementById("funMessage")) document.getElementById("funMessage").classList.add("hidden");
+    if (document.getElementById("modalMessage")) document.getElementById("modalMessage").classList.add("hidden");
+    if (playersGrid) playersGrid.classList.add("hidden");
+    if (messageBox) messageBox.classList.add("hidden");
+}
+
+// --- FIN DE PARTIE AUTOMATIQUE ---
+function listenEndGame() {
+    if (playersListener) playersListener.off();
+    playersListener = db.ref('games/' + gameCode + '/players');
+    playersListener.on('value', snap => {
+        const players = snap.val() || {};
+        db.ref('games/' + gameCode + '/gameEnded').once('value').then(flagSnap => {
+            if (flagSnap.val()) {
+                if (!gameEnded) {
+                    gameEnded = true;
+                    showScoreTableWithPodium(players);
+                }
+                if (playersListener) playersListener.off();
+                return;
+            }
+            // 1. Au moins un joueur a terminé les 28 rounds ?
+            let someoneFinished = false;
+            Object.values(players).forEach(p => {
+                if (p.finished || ((p.round || 1) > 28 && !p.eliminated)) someoneFinished = true;
+            });
+            // 2. Tous éliminés ?
+            let allEliminated = Object.values(players).length > 0 &&
+                Object.values(players).every(p => p.eliminated);
+
+            // Correction : si tous éliminés, marque le dernier survivant comme finished:true
+            if (someoneFinished || allEliminated) {
+                if (allEliminated) {
+                    let arr = Object.entries(players).map(([id, p]) => ({
+                        id,
+                        pseudo: p.pseudo,
+                        roundsCompleted: p.roundsCompleted !== undefined ? p.roundsCompleted : ((p.round || 1) - 1),
+                        totalTime: p.totalTime || 0,
+                        finishTime: p.finishTime || 0
+                    }));
+                    arr.sort((a, b) =>
+                        b.roundsCompleted - a.roundsCompleted ||
+                        a.totalTime - b.totalTime ||
+                        a.finishTime - b.finishTime
+                    );
+                    if (arr.length > 0) {
+                        db.ref('games/' + gameCode + '/winner').set(arr[0].pseudo);
+                        db.ref('games/' + gameCode + '/players/' + arr[0].id).update({ finished: true });
+                    }
+                }
+                triggerGameEnd(players);
+            }
+        });
+    });
+}
+
+// --- MODE SPECTATEUR ---
+function eliminatePlayer(reason) {
+    eliminated = true;
+    db.ref('games/' + gameCode + '/players/' + playerId + '/eliminated').set(true);
+    gameBoard.classList.add("hidden");
+    clearInterval(timerInterval);
+
+    // Détermine le contexte d'élimination
+    let config = getRoundConfig(currentRound);
+    let msg = "";
+    if (currentRound <= 2) {
+        msg = pickMessage(eliminationMessages.special.early);
+    } else if (currentRound >= 25) {
+        msg = pickMessage(eliminationMessages.special.late);
+    } else if (reason && reason.includes("Temps")) {
+        msg = pickMessage(eliminationMessages[config.difficulty].timeout);
+    } else {
+        msg = pickMessage(eliminationMessages[config.difficulty].attempts);
+    }
+    showModalMessage(msg, 3500);
+    setTimeout(() => {
+        showMessage("Éliminé : " + reason + " | Tu es en mode spectateur, observe les autres !", "error");
+        // Correction : affiche la liste et infos pour les éliminés
+        gameInfo.classList.remove("hidden");
+        document.getElementById("livePlayersList").classList.remove("hidden");
+        document.getElementById("livePlayersList").style.display = "block";
+        listenLivePlayersList();
+    }, 3500);
+}
+
+// 3. UI Elements
+const gameCodeForm = document.getElementById("gameCodeForm");
+const gameCodeInput = document.getElementById("gameCodeInput");
+const gameCodeBtn = document.getElementById("gameCodeBtn");
+const signupForm = document.getElementById("signupForm");
+const pseudoInput = document.getElementById("pseudoInput");
+const signupBtn = document.getElementById("signupBtn");
+const controlsDiv = document.getElementById("controlsDiv");
+const startBtn = document.getElementById("startBtn");
+const gameInfo = document.getElementById("gameInfo");
+const playersGrid = document.getElementById("playersGrid");
+const messageBox = document.getElementById("messageBox");
+const gameBoard = document.getElementById("gameBoard");
+const wordGrid = document.getElementById("wordGrid");
+const timerDisplay = document.getElementById("timer");
+const roundNumberDisplay = document.getElementById("roundNumber");
+const wordLengthDisplay = document.getElementById("wordLength");
+const playersRemainingDisplay = document.getElementById("playersRemaining");
+
+// 4. Gestion du code de partie
+gameCodeBtn.onclick = () => {
+    gameCode = gameCodeInput.value.trim().toUpperCase();
+    if (!gameCode) return showMessage("Code de partie requis", "error");
+    gameCodeForm.classList.add("hidden");
+    signupForm.classList.remove("hidden");
+    // Appelle listenEndGame UNIQUEMENT après que gameCode est défini
+    listenEndGame();
+     listenPlayers(); 
+
+};
+
+// 5. Inscription joueur/admin
+signupBtn.onclick = () => {
+    pseudo = pseudoInput.value.trim();
+    if (!pseudo) return showMessage("Pseudo requis", "error");
+    if (pseudo === "ADMINSECRET") {
+        isAdmin = true;
+        controlsDiv.classList.remove("hidden");
+        signupForm.classList.add("hidden");
+        showMessage("Vous êtes l'admin. Lancez la partie quand tout le monde est prêt.", "info");
+        // Correction : affiche la liste et infos pour l'admin aussi
+        gameInfo.classList.remove("hidden");
+        document.getElementById("livePlayersList").classList.remove("hidden");
+        document.getElementById("livePlayersList").style.display = "block";
+        listenLivePlayersList();
+        playersGrid.classList.add("hidden");
+    } else {
+        // Joueur normal
+        playerId = db.ref().child('games/' + gameCode + '/players').push().key;
+        db.ref('games/' + gameCode + '/players/' + playerId).set({
+            pseudo: pseudo,
+            eliminated: false,
+            round: 1,
+            attempts: [],
+            finished: false,
+            roundsCompleted: 0,
+            totalTime: 0
+        });
+        signupForm.classList.add("hidden");
+        showMessage("En attente du démarrage par l'admin...", "info");
+        // Correction : affiche la liste et infos pour chaque joueur
+        gameInfo.classList.remove("hidden");
+        document.getElementById("livePlayersList").classList.remove("hidden");
+        document.getElementById("livePlayersList").style.display = "block";
+        listenLivePlayersList();
+        playersGrid.classList.add("hidden");
+        db.ref('games/' + gameCode + '/status').on('value', snap => {
+            const status = snap.val();
+            if (status === "started" && !gameStarted && !isAdmin && playerId) {
+                gameStarted = true;
+                messageBox.classList.add("hidden");
+                gameInfo.classList.remove("hidden");
+                gameBoard.classList.remove("hidden");
+                startGame();
+            }
+        });
+    }
+
+};
+// 8. Ecoute des joueurs (affichage salle d'attente, joueurs actifs/éliminés)
+function listenPlayers() {
+    db.ref('games/' + gameCode + '/players').on('value', snap => {
+        const players = snap.val() || {};
+        activePlayers = [];
+        eliminatedPlayers = [];
+        let remaining = 0;
+        Object.entries(players).forEach(([id, p]) => {
+            if (p.eliminated) {
+                eliminatedPlayers.push(p.pseudo);
+            } else {
+                activePlayers.push(p.pseudo);
+                remaining++;
+            }
+        });
+        playersRemainingDisplay.textContent = remaining;
+    });
+}
+
+// 6. Lancement de la partie par l'admin
+startBtn.onclick = () => {
+// Respecte les règles : status doit être une string
+db.ref('games/' + gameCode + '/status').set("started", (error) => {
+if (error) {
+showMessage("Erreur Firebase : permission refusée. Vérifiez les règles de sécurité dans la console Firebase.", "error");
+} else {
+// Stocke le timestamp séparément si besoin
+db.ref('games/' + gameCode + '/startTime').set(Date.now());
+controlsDiv.classList.add("hidden");
+showMessage("La partie commence !", "success");
+}
+});
+};
+
+// 7. Ecoute du démarrage de la partie
+db.ref('games/' + gameCode + '/status').on('value', snap => {
+const status = snap.val();
+// Correction : status est une string ("started")
+if (status === "started" && !gameStarted && !isAdmin && playerId) {
+gameStarted = true;
+messageBox.classList.add("hidden");
+gameInfo.classList.remove("hidden");
+gameBoard.classList.remove("hidden");
+startGame();
+}
+});
+
+
+
+// 9. Démarrage du jeu pour le joueur
+function startGame() {
+    // Récupère le round du joueur
+    db.ref('games/' + gameCode + '/players/' + playerId).once('value').then(snap => {
+        const player = snap.val();
+        if (!player || player.eliminated) {
+            showMessage("Vous êtes éliminé ou absent.", "error");
+            gameBoard.classList.add("hidden");
+            return;
+        }
+        currentRound = player.round || 1;
+        eliminated = player.eliminated;
+        totalTime = player.totalTime || 0;
+        // --- AJOUT : démarre la liste des joueurs en temps réel ---
+        document.getElementById("livePlayersList").style.display = "block";
+        listenLivePlayersList();
+        startRound();
+    });
+}
+
+// --- Correction : startRound enregistre le début du round ---
+function startRound() {
+    if (eliminated) return;
+    let config = getRoundConfig(currentRound);
+    let words = wordList[config.difficulty];
+    currentWord = words[(currentRound-1)%words.length].toUpperCase();
+    currentWordLength = currentWord.length;
+    maxAttempts = 6;
+    attempts = [];
+    currentInput = "";
+    roundNumberDisplay.textContent = currentRound;
+    wordLengthDisplay.textContent = currentWordLength;
+    timeLeft = config.time;
+    updateTimerDisplay();
+    // --- ENREGISTRE LE DÉBUT DU ROUND ---
+    roundStartTime = Date.now();
+    db.ref('games/' + gameCode + '/players/' + playerId + '/currentWord').set(currentWord);
+    db.ref('games/' + gameCode + '/players/' + playerId + '/currentRound').set(currentRound);
+    db.ref('games/' + gameCode + '/players/' + playerId + '/roundStartTime').set(roundStartTime);
+    renderGrid();
+    startTimer();
+}
+
+function getRoundConfig(round) {
+let idx = 0, sum = 0;
+for (let c of roundConfig) {
+sum += c.rounds;
+if (round <= sum) return c;
+idx++;
+}
+return roundConfig[roundConfig.length-1];
+}
+
+// 11. Timer
+function startTimer() {
+clearInterval(timerInterval);
+timerInterval = setInterval(() => {
+timeLeft--;
+updateTimerDisplay();
+if (timeLeft <= 0) {
+clearInterval(timerInterval);
+eliminatePlayer("Temps écoulé !");
+}
+}, 1000);
+}
+function updateTimerDisplay() {
+let min = Math.floor(timeLeft/60);
+let sec = timeLeft%60;
+timerDisplay.textContent = `${min}:${sec.toString().padStart(2,"0")}`;
+}
+
+// 12. Grille Wordle
+function renderGrid() {
+let html = "";
+for (let i = 0; i < maxAttempts; i++) {
+// Ligne active : affiche currentInput, sinon affiche l'essai
+let display = (i === attempts.length) ? currentInput : (attempts[i] || "");
+html += `<div style="display:flex;gap:5px;">`;
+for (let j = 0; j < currentWordLength; j++) {
+let letter = display[j] || "";
+let status = "";
+if (attempts[i] && attempts[i].length === currentWordLength) {
+status = getLetterStatus(attempts[i], j);
+}
+let activeClass = (i === attempts.length) ? "active" : "";
+html += `<div class="letter-box ${status} ${activeClass}">${letter}</div>`;
+}
+html += `</div>`;
+}
+wordGrid.innerHTML = html;
+}
+
+function getLetterStatus(word, idx) {
+if (!word || word.length !== currentWordLength) return "";
+let letter = word[idx];
+if (currentWord[idx] === letter) return "correct";
+else if (currentWord.includes(letter)) return "present";
+else return "absent";
+}
+
+// 13. Gestion clavier
+document.querySelectorAll(".key").forEach(btn => {
+btn.onclick = () => handleKey(btn.dataset.key);
+});
+document.addEventListener("keydown", e => {
+// Ignore si la grille n'est pas affichée
+if (!gameBoard || gameBoard.classList.contains("hidden")) return;
+let key = e.key;
+if (key === "Enter") handleKey("Enter");
+else if (key === "Backspace") handleKey("Backspace");
+else if (/^[a-zA-Z]$/.test(key)) handleKey(key.toUpperCase());
+});
+
+function handleKey(key) {
+if (eliminated || !gameStarted) return;
+if (key === "Backspace") {
+currentInput = currentInput.slice(0,-1);
+} else if (key === "Enter") {
+if (currentInput.length !== currentWordLength) return;
+if (!/^[A-Z]+$/.test(currentInput)) return;
+attempts.push(currentInput);
+db.ref('games/' + gameCode + '/players/' + playerId + '/attempts').set(attempts);
+// Passage au round suivant UNIQUEMENT si le mot est trouvé
+if (currentInput === currentWord) {
+currentInput = ""; // reset input for next round
+nextRound();
+return;
+}
+// Si le joueur a utilisé tous ses essais, il est éliminé
+if (attempts.length >= maxAttempts) {
+eliminatePlayer("Trop d'essais !");
+return;
+}
+currentInput = "";
+} else if (/^[A-Z]$/.test(key) && currentInput.length < currentWordLength) {
+currentInput += key;
+}
+renderGrid();
+}
+
+// --- Correction : nextRound sauvegarde le temps du round et met à jour roundsCompleted ---
+function nextRound() {
+    clearInterval(timerInterval);
+    // --- CALCUL DU TEMPS PASSÉ SUR CE ROUND ---
+    const now = Date.now();
+    const timeSpent = roundStartTime ? (now - roundStartTime) : 0;
+    totalTime += timeSpent;
+    // Met à jour totalTime et roundsCompleted dans Firebase
+    db.ref('games/' + gameCode + '/players/' + playerId).update({
+        totalTime: totalTime,
+        roundsCompleted: (currentRound) // roundsCompleted = round actuel (avant incrément)
+    });
+    // Message de progression avant le nouveau round
+    let config = getRoundConfig(currentRound);
+    let msg = "";
+    if (config.difficulty === "easy") {
+        msg = pickMessage(successMessages.easy);
+    } else if (config.difficulty === "medium") {
+        msg = pickMessage(successMessages.medium.normal);
+    } else {
+        msg = pickMessage(successMessages.hard.normal);
+    }
+    showModalMessage(msg, 3000);
+    setTimeout(() => {
+        currentRound++;
+        if (currentRound > maxRounds) {
+            finishPlayer();
+            return;
+        }
+        db.ref('games/' + gameCode + '/players/' + playerId + '/round').set(currentRound);
+        db.ref('games/' + gameCode + '/players/' + playerId + '/attempts').set([]);
+        startRound();
+    }, 3000);
+}
+
+// --- Correction : eliminatePlayer sauvegarde le temps du round et roundsCompleted ---
+function eliminatePlayer(reason) {
+    eliminated = true;
+    clearInterval(timerInterval);
+    // --- CALCUL DU TEMPS DU DERNIER ROUND ---
+    const now = Date.now();
+    const timeSpent = roundStartTime ? (now - roundStartTime) : 0;
+    totalTime += timeSpent;
+    // roundsCompleted = round actuel - 1 (car éliminé avant de finir ce round)
+    const roundsCompleted = (currentRound - 1);
+    db.ref('games/' + gameCode + '/players/' + playerId).update({
+        eliminated: true,
+        totalTime: totalTime,
+        roundsCompleted: roundsCompleted
+    });
+    gameBoard.classList.add("hidden");
+
+    // Détermine le contexte d'élimination
+    let config = getRoundConfig(currentRound);
+    let msg = "";
+    if (currentRound <= 2) {
+        msg = pickMessage(eliminationMessages.special.early);
+    } else if (currentRound >= 25) {
+        msg = pickMessage(eliminationMessages.special.late);
+    } else if (reason && reason.includes("Temps")) {
+        msg = pickMessage(eliminationMessages[config.difficulty].timeout);
+    } else {
+        msg = pickMessage(eliminationMessages[config.difficulty].attempts);
+    }
+    showModalMessage(msg, 3500);
+    setTimeout(() => {
+        showMessage("Éliminé : " + reason + " | Tu es en mode spectateur, observe les autres !", "error");
+        // Correction : affiche la liste et infos pour les éliminés
+        gameInfo.classList.remove("hidden");
+        document.getElementById("livePlayersList").classList.remove("hidden");
+        document.getElementById("livePlayersList").style.display = "block";
+        listenLivePlayersList();
+    }, 3500);
+}
+
+// --- Correction : finishPlayer sauvegarde le temps du dernier round et roundsCompleted ---
+function finishPlayer() {
+    clearInterval(timerInterval);
+    // --- CALCUL DU TEMPS DU DERNIER ROUND ---
+    const now = Date.now();
+    const timeSpent = roundStartTime ? (now - roundStartTime) : 0;
+    totalTime += timeSpent;
+    // roundsCompleted = maxRounds (tous les rounds faits)
+    db.ref('games/' + gameCode + '/players/' + playerId).update({
+        finished: true,
+        totalTime: totalTime,
+        roundsCompleted: maxRounds
+    });
+    gameBoard.classList.add("hidden");
+    let msg = "";
+    if (currentRound > maxRounds) {
+        msg = pickMessage(eliminationMessages.special.win);
+    } else {
+        msg = "Bravo ! Vous avez terminé tous les rounds.";
+    }
+    showModalMessage(msg, 3500);
+    setTimeout(() => {
+        showMessage("Bravo ! Vous avez terminé tous les rounds.", "success");
+    }, 3500);
+}
+
+// 17. Message utilitaire
+function showMessage(msg, type="info") {
+messageBox.textContent = msg;
+messageBox.className = "message " + type;
+messageBox.classList.remove("hidden");
+}
+
+// 18. Empêcher les joueurs éliminés de rejouer
+db.ref('games/' + gameCode + '/players/' + playerId + '/eliminated').on('value', snap => {
+if (snap.val()) {
+eliminated = true;
+gameBoard.classList.add("hidden");
+showMessage("Vous êtes éliminé.", "error");
+playersGrid.classList.add("hidden");
+gameInfo.classList.remove("hidden");
+document.getElementById("livePlayersList").classList.remove("hidden");
+document.getElementById("livePlayersList").style.display = "block";
+listenLivePlayersList();
+}
+});
+
+
+// Utilitaire pour afficher le message animé modale
+function showModalMessage(msg, duration = 3000) {
+    const modal = document.getElementById("modalMessage");
+    if (!modal) return;
+    modal.textContent = msg;
+    modal.classList.remove("hidden");
+    modal.style.animation = "none";
+    void modal.offsetWidth;
+    modal.style.animation = null;
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, duration);
+}
+
+// Utilitaire pour choisir un message random dans un tableau
+function pickMessage(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// MESSAGES ORGANISÉS PAR DIFFICULTÉ ET CONTEXTE
+const eliminationMessages = {
+    easy: {
+        timeout: [
+            "⏰ Oups ! Le temps file quand on s'amuse trop !",
+            "🐌 Prends ton temps... ah non attends, c'est trop tard ! 😅",
+            "☕ T'as pris un café entre deux lettres ? ☕",
+            "🎈 Pas grave ! On t'aime quand même !",
+            "🌸 Trop de réflexion tue la réflexion ! 😊",
+            "🦋 Tu contemplais les papillons ? C'est mignon !",
+            "🍪 Allez, tu mérites un cookie de consolation ! 🍪"
+        ],
+        attempts: [
+            "🎯 Presque ! Bon... pas vraiment, mais l'intention compte ! 💛",
+            "🌈 C'est en se trompant qu'on apprend ! (Beaucoup apparemment 😄)",
+            "🎪 Bravo pour l'effort ! Vraiment ! On y croit !",
+            "🎨 Créatif dans tes propositions ! Un peu trop même ! 😊",
+            "🎭 L'important c'est de participer ! Et tu l'as fait !",
+            "🌟 Tu as essayé, c'est déjà beau ! ✨",
+            "🎁 Cadeau : une deuxième chance... pour la prochaine partie ! 😉"
+        ]
+    },
+    medium: {
+        timeout: [
+            "⏱️ Presque ! T'étais sur la bonne voie ! 🛤️",
+            "🏃 Belle course ! Juste un peu essoufflé à la fin ! 💨",
+            "⏳ Le chrono est un peu sévère aujourd'hui, non ? 😅",
+            "🎢 Quelle aventure ! Tu t'es bien battu ! 💪",
+            "🌅 Beau parcours ! Le lever de soleil était avec toi !",
+            "🎵 La musique s'arrête, mais la danse était belle ! 💃",
+            "🌊 Tu as surfé comme un pro... presque ! 🏄"
+        ],
+        attempts: [
+            "🎲 Les mots se sont bien cachés aujourd'hui ! 🙈",
+            "🧩 Ce puzzle était coton ! Bravo d'avoir essayé ! 🎀",
+            "🎯 Proche du centre ! Vraiment proche ! 📍",
+            "📚 Ces mots sont sournois ! On les aura la prochaine fois ! 💪",
+            "🌺 Belle persévérance ! C'est tout à ton honneur ! 🌸",
+            "🎪 Performance honorable ! On applaudit ! 👏",
+            "🍀 Un peu de chance en moins, mais beaucoup de cœur ! 💚"
+        ]
+    },
+    hard: {
+        timeout: [
+            "⚔️ Quelle épopée ! Tu es un héros ! 🦸",
+            "🏔️ Tu as gravi la montagne avec courage ! Respect ! 🙌",
+            "🎖️ Médaille d'honneur pour être arrivé si loin ! 🏅",
+            "💪 Incroyable parcours ! On est fiers de toi ! ✨",
+            "🌟 Tu brilles même dans l'élimination ! 💫",
+            "🔥 Quelle détermination ! Chapeau l'artiste ! 🎩",
+            "👑 Pas de couronne, mais un cœur de champion ! 💛"
+        ],
+        attempts: [
+            "🧠 Ces mots étaient vraiment diaboliques ! Bravo d'avoir tenu ! 🎓",
+            "📚 Même les grands écrivains auraient galéré ! 📖",
+            "🎯 Tu t'es battu comme un lion ! Rugissement respecté ! 🦁",
+            "⚡ Le niveau HARD porte bien son nom ! Tu l'as vécu ! 💥",
+            "🌈 Belle aventure du début à la fin ! Arc-en-ciel mérité ! 🌟",
+            "💎 Élimination de prestige ! Tu peux être fier ! 🏆",
+            "🦋 Tu t'es envolé haut, très haut ! 🕊️"
+        ]
+    },
+    special: {
+        early: [
+            "🌱 Tout début d'aventure ! La prochaine sera meilleure ! 💚",
+            "🐣 Petit oiseau apprend à voler ! Tu reviendras plus fort ! 🦅",
+            "🎈 C'était juste l'échauffement ! Reviens vite ! 🎊"
+        ],
+        late: [
+            "😊 SI PROCHE ! Quel parcours magnifique ! 🌟",
+            "💛 Presque la ligne d'arrivée ! Quelle aventure ! 🏃",
+            "🌈 Tu peux être super fier de toi ! Incroyable ! ✨"
+        ],
+        win: [
+            "👑✨ CHAMPION ABSOLU ! BRAVO ! 🏆🎉",
+            "🌟💫 LÉGENDE ! TU AS TOUT GAGNÉ ! 🎊✨",
+            "🏆🔥 VICTOIRE TOTALE ! INCROYABLE ! 🌈🎆",
+            "💎👑 ROI/REINE DES MOTS ! RESPECT ! ⭐🎉"
+        ],
+        survivor: [
+            "🦸 SURVIVANT ULTIME ! Bravo guerrier ! 💪✨",
+            "🏆 DERNIER DEBOUT ! Quel honneur ! 👑🎉",
+            "⭐ CHAMPION PAR KO ! Respect total ! 💫🎊"
+        ]
+    }
+};
+
+const successMessages = {
+    easy: [
+        "🎉 Bravo champion ! En avant ! 🚀",
+        "⭐ Facile pour toi ! Continue comme ça ! 💪",
+        "🌸 Joli ! Très joli même ! 🌺",
+        "🎈 Youpi ! On continue l'aventure ! 🎊",
+        "🦄 Magique ! Tu es sur la bonne voie ! ✨",
+        "🍀 Quel talent ! On y croit ! 💚",
+        "🎯 En plein dedans ! Parfait ! 🎪",
+        "🌈 Coloré et réussi ! Bravo ! 🎨",
+        "🎵 Tout en musique ! La classe ! 🎶"
+    ],
+    medium: {
+        fast: [
+            "⚡ Waouh ! Quelle rapidité ! 🚀",
+            "🔥 Tu es en feu ! Continue ! 💫",
+            "🌟 Éblouissant ! Vraiment ! ✨",
+            "💎 Précision d'orfèvre ! Magnifique ! 🎯",
+            "🦅 Tu voles haut ! Impressionnant ! 🏔️",
+            "🎪 Spectaculaire ! On adore ! 👏",
+            "🌺 Élégant et efficace ! Bravo ! 🎭"
+        ],
+        normal: [
+            "👍 Solide ! Très solide même ! 🏛️",
+            "🎨 Belle performance ! Continue ! 🖼️",
+            "💪 Bien joué ! Tu gères ! 🎯",
+            "🌸 Gracieux ! On applaudit ! 👏",
+            "⚔️ Vaillant guerrier ! En avant ! 🛡️",
+            "🎭 Classe ! Vraiment classe ! 🎩"
+        ],
+        slow: [
+            "😅 Ouf ! Bien sauvé champion ! 🦸",
+            "💦 Suspens total ! Mais tu l'as fait ! 🎬",
+            "⏰ Au finish ! Quel courage ! 💪",
+            "🎢 Palpitant ! Mon cœur bat encore ! 💓",
+            "😊 Limite mais victoire ! Bravo ! 🏆",
+            "🎪 Quel rebondissement ! Incroyable ! ✨"
+        ]
+    },
+    hard: {
+        fast: [
+            "🌟✨ EXTRAORDINAIRE ! QUELLE MAÎTRISE ! 💫",
+            "👑 Tu es une légende vivante ! 🏆",
+            "🔥💎 Brillantissime ! On t'admire ! ✨",
+            "⚡🦸 Super-héros détecté ! Waouh ! 🌟",
+            "🎆 Feu d'artifice de talent ! Magique ! ✨",
+            "🏔️ Sommet atteint ! Quel exploit ! 🦅",
+            "🌠 Étoile filante ! Vœu exaucé ! 💫"
+        ],
+        normal: [
+            "💪 Incroyable maîtrise ! Respect ! 🙌",
+            "🔥 Tu gères la pression ! Champion ! 🏆",
+            "🧠 Brillant ! Vraiment brillant ! 💡",
+            "⚔️ Guerrier valeureux ! En avant ! 🛡️",
+            "🎯 Précision admirable ! Bravo ! 🎪",
+            "👊 Force et honneur ! Magnifique ! ⭐"
+        ],
+        slow: [
+            "😅 Quel suspens ! Mais victoire ! 🎉",
+            "💪 Courage exemplaire ! Bravo ! 🏅",
+            "🎢 Montagne russe émotionnelle ! Gagné ! 🎊",
+            "⏰ Au courage ! Tu l'as mérité ! 💛",
+            "🦸 Héros du dernier moment ! Respect ! ⭐",
+            "😊 Sauvé ! Quel soulagement ! Bravo ! 🌈"
+        ]
+    }
+};
+// --- LISTE DES JOUEURS EN TEMPS RÉEL ---
+function renderLivePlayersList(playersObj) {
+    if (!playersObj) return;
+    let arr = Object.entries(playersObj).map(([id, p]) => ({
+        pseudo: p.pseudo,
+        status: p.eliminated ? "Éliminé" : "En jeu",
+        rounds: p.roundsCompleted !== undefined ? p.roundsCompleted : ((p.round || 1) - 1)
+    }));
+    // Tri : joueurs en jeu d'abord, puis éliminés, puis par rounds desc
+    arr.sort((a, b) => {
+        if (a.status !== b.status) return a.status === "En jeu" ? -1 : 1;
+        return b.rounds - a.rounds;
+    });
+let html = `<h3 style="color:#764ba2;text-align:center;margin-bottom:15px;font-size:1.4em;">👥 Joueurs en temps réel</h3>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">`;    arr.forEach(p => {
+        html += `<div style="background:#fff;border-radius:8px;padding:10px 8px;box-shadow:0 2px 8px #764ba222;display:flex;flex-direction:column;align-items:center;${p.status==="Éliminé"?"opacity:0.5;":""}">
+            <div style="font-weight:bold;color:#764ba2;font-size:1.08em;">${p.pseudo}</div>
+            <div style="font-size:0.98em;color:${p.status==="Éliminé"?"#eb2f06":"#27ae60"};font-weight:600;">${p.status}</div>
+            <div style="font-size:0.95em;color:#555;">Rounds : <b>${p.rounds}</b></div>
+        </div>`;
+    });
+    html += `</div>`;
+    document.getElementById("livePlayersList").innerHTML = html;
+}
+
+// --- Mise à jour en temps réel de la liste ---
+function listenLivePlayersList() {
+    db.ref('games/' + gameCode + '/players').on('value', snap => {
+        const players = snap.val() || {};
+        renderLivePlayersList(players);
+    });
+}
+</script>
+</body>
+</html>
+
