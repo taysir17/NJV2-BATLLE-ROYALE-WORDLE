@@ -861,9 +861,9 @@ medium: ["CAMION", "JARDIN", "ORDURE", "BOUTON", "CITRON", "SOURIS", "LAMPE", "C
 hard: ["ORDINATEUR", "CROCODILE", "PARAPLUIE", "ASTRONAUTE", "MICROPHONE", "BIBLIOTHEQUE", "TELEPHONE", "CALCULATRICE", "FRAMBOISE", "CHAMPIGNON"]
 };
 let roundConfig = [
-{difficulty: "easy", rounds: 10, time: 60},
-{difficulty: "medium", rounds: 8, time: 90},
-{difficulty: "hard", rounds: 10, time: 135}
+{difficulty: "easy", rounds: 10, time: 120},
+{difficulty: "medium", rounds: 8, time: 180},
+{difficulty: "hard", rounds: 10, time: 200}
 ];
 let currentWord = "";
 let currentWordLength = 5;
@@ -1273,7 +1273,7 @@ function startRound() {
     let words = wordList[config.difficulty];
     currentWord = words[(currentRound-1)%words.length].toUpperCase();
     currentWordLength = currentWord.length;
-    maxAttempts = 6;
+    maxAttempts = currentWordLength +1;
     attempts = [];
     currentInput = "";
     roundNumberDisplay.textContent = currentRound;
