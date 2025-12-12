@@ -701,9 +701,9 @@ min-width: 35px;
 <li>
 ⏳ <b>Durée des rounds selon la difficulté :</b>
 <ul style="margin-left:18px;">
-<li>🟢 <b>Easy (10 premiers rounds)</b> : 120 secondes</li>
-<li>🟡 <b>Medium (8 rounds suivants)</b> : 180 secondes</li>
-<li>🔴 <b>Hard (10 derniers rounds)</b> : 200 secondes</li>
+<li>🟢 <b>Easy (10 premiers rounds)</b> : 180 secondes</li>
+<li>🟡 <b>Medium (8 rounds suivants)</b> : 210 secondes</li>
+<li>🔴 <b>Hard (10 derniers rounds)</b> : 280 secondes</li>
 </ul>
 <span style="color:#764ba2;font-size:0.98em;">La durée augmente avec la difficulté !</span>
 </li>
@@ -861,9 +861,9 @@ medium: ["CAMION", "JARDIN", "ORDURE", "BOUTON", "CITRON", "SOURIS", "LAMPE", "C
 hard: ["ORDINATEUR", "CROCODILE", "PARAPLUIE", "ASTRONAUTE", "MICROPHONE", "BIBLIOTHEQUE", "TELEPHONE", "CALCULATRICE", "FRAMBOISE", "CHAMPIGNON"]
 };
 let roundConfig = [
-{difficulty: "easy", rounds: 10, time: 120},
-{difficulty: "medium", rounds: 8, time: 180},
-{difficulty: "hard", rounds: 10, time: 200}
+{difficulty: "easy", rounds: 10, time: 180},
+{difficulty: "medium", rounds: 8, time: 210},
+{difficulty: "hard", rounds: 10, time: 280}
 ];
 let currentWord = "";
 let currentWordLength = 5;
@@ -877,6 +877,7 @@ let timeLeft = 0;
 let currentInput = ""; // <-- DÉFINI ICI EN GLOBAL
 let gameEnded = false; // Drapeau local pour la fin de partie
 let playersListener = null; // Pour détacher le listener
+let keyboardState = {};
 
 // --- SCORE UTILS ---
 // Nouveau calcul : score = (roundsCompleted × 1000) - totalTimeEnSecondes - (totalAttempts × 100)
@@ -1259,6 +1260,8 @@ function startGame() {
         currentRound = player.round || 1;
         eliminated = player.eliminated;
         totalTime = player.totalTime || 0;
+        loadKeyboardState();
+
         // --- AJOUT : démarre la liste des joueurs en temps réel ---
         document.getElementById("livePlayersList").style.display = "block";
         listenLivePlayersList();
@@ -1269,6 +1272,8 @@ function startGame() {
 // --- Correction : startRound enregistre le début du round ---
 function startRound() {
     if (eliminated) return;
+    resetKeyboard();
+
     let config = getRoundConfig(currentRound);
     let words = wordList[config.difficulty];
     currentWord = words[(currentRound-1)%words.length].toUpperCase();
@@ -1358,7 +1363,95 @@ if (key === "Enter") handleKey("Enter");
 else if (key === "Backspace") handleKey("Backspace");
 else if (/^[a-zA-Z]$/.test(key)) handleKey(key.toUpperCase());
 });
-
+function updateKeyboard(word) {
+    // Parcourir chaque lettre du mot validé
+    for (let i = 0; i < word.length; i++) {
+        let letter = word[i];
+        
+        // Déterminer le statut de cette lettre (correct/present/absent)
+        let status = getLetterStatus(word, i);
+        
+        // Récupérer le statut actuel de cette lettre dans keyboardState
+        let currentStatus = keyboardState[letter] || "";
+        
+        // Définir l'ordre de priorité (correct > present > absent)
+        let priority = {
+            "correct": 3,
+            "present": 2,
+            "absent": 1,
+            "": 0
+        };
+        
+        // Si le nouveau statut est meilleur, mettre à jour
+        if (priority[status] > priority[currentStatus]) {
+            // Mettre à jour keyboardState
+            keyboardState[letter] = status;
+            
+            // Trouver le bouton correspondant dans le DOM
+            let keyButton = document.querySelector(`[data-key="${letter}"]`);
+            
+            if (keyButton) {
+                // Retirer les anciennes classes
+                keyButton.classList.remove("correct", "present", "absent");
+                
+                // Ajouter la nouvelle classe
+                if (status) {
+                    keyButton.classList.add(status);
+                }
+            }
+        }
+    }
+    
+    // Sauvegarder dans Firebase (optionnel)
+    if (playerId) {
+        db.ref('games/' + gameCode + '/players/' + playerId + '/keyboardState').set(keyboardState);
+    }
+}
+function resetKeyboard() {
+    // Réinitialiser l'objet d'état
+    keyboardState = {};
+    
+    // Sélectionner tous les boutons du clavier
+    let allKeys = document.querySelectorAll(".key");
+    
+    // Parcourir chaque bouton
+    allKeys.forEach(keyButton => {
+        // Retirer toutes les classes de couleur
+        keyButton.classList.remove("correct", "present", "absent");
+    });
+    
+    // Supprimer de Firebase (optionnel)
+    if (playerId) {
+        db.ref('games/' + gameCode + '/players/' + playerId + '/keyboardState').remove();
+    }
+}
+function loadKeyboardState() {
+    // Charger l'état sauvegardé depuis Firebase
+    db.ref('games/' + gameCode + '/players/' + playerId + '/keyboardState').once('value').then(snap => {
+        let savedState = snap.val();
+        
+        // Si un état existe
+        if (savedState) {
+            keyboardState = savedState;
+            
+            // Réappliquer les classes CSS pour chaque lettre
+            for (let letter in keyboardState) {
+                let status = keyboardState[letter];
+                
+                // Trouver le bouton correspondant
+                let keyButton = document.querySelector(`[data-key="${letter}"]`);
+                
+                if (keyButton && status) {
+                    // Retirer les anciennes classes
+                    keyButton.classList.remove("correct", "present", "absent");
+                    
+                    // Ajouter la classe correspondante
+                    keyButton.classList.add(status);
+                }
+            }
+        }
+    });
+}
 function handleKey(key) {
 if (eliminated || !gameStarted) return;
 if (key === "Backspace") {
@@ -1367,6 +1460,7 @@ currentInput = currentInput.slice(0,-1);
 if (currentInput.length !== currentWordLength) return;
 if (!/^[A-Z]+$/.test(currentInput)) return;
 attempts.push(currentInput);
+updateKeyboard(currentInput);
 db.ref('games/' + gameCode + '/players/' + playerId + '/attempts').set(attempts);
 // Passage au round suivant UNIQUEMENT si le mot est trouvé
 if (currentInput === currentWord) {
